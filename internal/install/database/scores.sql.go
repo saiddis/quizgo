@@ -27,7 +27,7 @@ RETURNING id, completion_time, hard_quizzes_done, medium_quizzes_done, easy_quiz
 
 type CreateScoreParams struct {
 	ID                uuid.UUID
-	CompletionTime    string
+	CompletionTime    int64
 	HardQuizzesDone   int32
 	MediumQuizzesDone int32
 	EasyQuizzesDone   int32

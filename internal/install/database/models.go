@@ -5,15 +5,22 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type Quiz struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	QuizType     string
+	QuizCategory string
+	UserID       uuid.UUID
+}
+
 type Score struct {
 	ID                uuid.UUID
-	CompletionTime    string
+	CompletionTime    int64
 	HardQuizzesDone   int32
 	MediumQuizzesDone int32
 	EasyQuizzesDone   int32
@@ -21,18 +28,9 @@ type Score struct {
 	UserID            uuid.UUID
 }
 
-type Session struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	QuizType     string
-	QuizCategory string
-	UserID       uuid.NullUUID
-}
-
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Name      sql.NullString
-	ApiKey    string
+	Email     string
 }

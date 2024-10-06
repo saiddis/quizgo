@@ -1,0 +1,49 @@
+{{ block "quizgo" .}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>quizgo</title>
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/css/style.css">
+    </head>
+    <body>
+        <main>
+            <div class="quiz-container">
+            </div>
+            <button type="" class="next-btn">Next</button>
+            <div class="results" hidden>
+                
+            </div>
+        </main>
+    
+        <div class="quizzes" hidden>
+        {{ range .quizzes }}
+            <div class="quiz" type="{{.Type}}" category="{{.Category}}" difficulty="{{.Difficulty}}" selected="">
+                <h2 class="question">{{.Question}}</h2>
+                    <ul class="options-list">
+                        {{range $option := .IncorrectAnswers}}
+                        <li class="options-list-item">
+                            <label>
+                                <input class="option" type="radio" name="option" value="{{$option}}"> {{$option}}
+                            </label>
+                        </li>
+                        {{end}}
+                        <li class="options-list-item">
+                            <label>
+                                <input class="option correct" type="radio" name="option" value="{{.CorrectAnswer}}"> {{.CorrectAnswer}}
+                            </label>
+                        </li>
+                    </ul>
+            </div>
+        {{ end }}
+        </div>
+        <script src="../static/quiz.js">
+        </script>
+    </body>
+</html>
+{{ end }}

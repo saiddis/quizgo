@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
+	"gihub.com/saiddis/quizgo"
 	"gihub.com/saiddis/quizgo/http/controllers"
 	"gihub.com/saiddis/quizgo/middleware/authenticator"
 	"gihub.com/saiddis/quizgo/postgres"
@@ -30,33 +33,18 @@ func main() {
 		log.Fatal("Can't connect to database:", err)
 	}
 
-	// tokenService := token.NewService(secret)
-
-	// userService := user.NewService(db, tokenService)
-	// scoreService := score.NewService(db)
-	// sessionService := session.NewService(db)
-
-	// router := chi.NewRouter()
-	// router.Use(cors.Handler(cors.Options{
-	// 	AllowedOrigins:   []string{"https://*", "http://*"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowedHeaders:   []string{"*"},
-	// 	ExposedHeaders:   []string{"Link"},
-	// 	AllowCredentials: false,
-	// 	MaxAge:           300,
-	// }))
-
-	// router.Post("/users", userService.CreateUser)
-	// router.Get("/users", userService.GetUsers)
-	// router.Post("/scores", scoreService.CreateScore)
-	// router.Post("/sessions", sessionService.CreateSession)
-
 	auth, err := authenticator.New(db)
 	if err != nil {
 		log.Fatalf("Failed to initialize the authenticator: %v", err)
 	}
 
-	rtr := controllers.NewServer(db, auth)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	triviaCaller := quizgo.NewTriviaCaller(client)
+
+	rtr := controllers.NewServer(db, triviaCaller, auth)
 	rtr.Router.Run()
 
 	// srv, err := server.NewServer("localhost",

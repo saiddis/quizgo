@@ -15,9 +15,9 @@ import (
 )
 
 type Authenticator struct {
-	*oidc.Provider
-	oauth2.Config
-	db *database.Queries
+	Provider *oidc.Provider
+	Config   oauth2.Config
+	db       *database.Queries
 }
 
 func New(db *database.Queries) (*Authenticator, error) {
@@ -85,9 +85,9 @@ func (a *Authenticator) VerifyIDToken(c *gin.Context, token *oauth2.Token) (*oid
 		log.Println(err)
 	}
 	oidcConfig := &oidc.Config{
-		ClientID: a.ClientID,
+		ClientID: a.Config.ClientID,
 	}
 
-	return a.Verifier(oidcConfig).Verify(c, rawIDToken)
+	return a.Provider.Verifier(oidcConfig).Verify(c, rawIDToken)
 
 }

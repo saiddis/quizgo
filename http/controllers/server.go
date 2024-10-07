@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 
+	"gihub.com/saiddis/quizgo"
 	"gihub.com/saiddis/quizgo/internal/install/database"
 	"gihub.com/saiddis/quizgo/middleware/authenticator"
 	"github.com/gin-contrib/sessions"
@@ -12,10 +13,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Client interface {
+	Fetch(c *gin.Context, urls []string) (*[]quizgo.Trivia, error)
+}
+
 type Server struct {
 	Router *gin.Engine
 	db     *database.Queries
 	auth   *authenticator.Authenticator
+	Client Client
 }
 
 type Templates struct {
@@ -31,11 +37,12 @@ func newTemplate() *Templates {
 		templates: template.Must(template.ParseGlob("../../web/template/*.html")),
 	}
 }
-func NewServer(db *database.Queries, auth *authenticator.Authenticator) *Server {
+func NewServer(db *database.Queries, client Client, auth *authenticator.Authenticator) *Server {
 	server := &Server{
 		Router: gin.Default(),
 		db:     db,
 		auth:   auth,
+		Client: client,
 	}
 
 	// To store custom types in our cookies,

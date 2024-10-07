@@ -8,23 +8,21 @@ let results = document.querySelector(".results")
 class Quizgo {
 	constructor() {
 		this.quiz = quizzes[index]
-		this.optionsList = this.quiz.querySelector(".options-list")
-		this.options = this.optionsList.querySelectorAll(".option")
-
 		this.setUpOptions()
+
 		quizContainer.append(this.quiz)
 		nextBtn.onclick = () => {
 			this.nextQuiz()
 		}
 	}
 	shuffleOptions() {
-		const optionsArray = Array.from(this.optionsList.querySelectorAll(".options-list-item"))
+		const optionsArray = Array.from(this.quiz.querySelectorAll(".options-list-item"))
 		for (let i = optionsArray.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));  // Random index from 0 to i
 			[optionsArray[i], optionsArray[j]] = [optionsArray[j], optionsArray[i]];  // Swap
 		}
 
-		// Clear the quiz options container and append the shuffled options
+		this.optionsList = this.quiz.querySelector(".options-list")
 		this.optionsList.innerHTML = ""
 		optionsArray.forEach(item => {
 			this.optionsList.appendChild(item)
@@ -32,12 +30,13 @@ class Quizgo {
 	}
 
 	setUpOptions() {
+		this.shuffleOptions()
+		this.options = this.optionsList.querySelectorAll(".option")
 		this.options.forEach(option => {
 			option.onchange = () => {
 				this.quiz.setAttribute("selected", option.getAttribute("value"))
 			}
 		})
-		this.shuffleOptions()
 	}
 
 	storeResults() {
@@ -78,8 +77,7 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 	}
 
 	nextQuiz() {
-		let quizValue = this.quiz.getAttribute("selected");
-		if (!quizValue) {
+		if (!this.quiz.getAttribute("selected")) {
 			return false
 		}
 		this.storeResults()
@@ -88,10 +86,8 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 			return
 		}
 		index += 1
-		quizContainer.replaceChildren(quizzes[index])
 		this.quiz = quizzes[index]
-		this.optionsList = this.quiz.querySelector(".options-list")
-		this.options = this.optionsList.querySelectorAll(".option")
+		quizContainer.replaceChildren(this.quiz)
 		this.setUpOptions()
 	}
 

@@ -27,7 +27,7 @@ func LoginHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state))
+		ctx.Redirect(http.StatusTemporaryRedirect, auth.Config.AuthCodeURL(state))
 	}
 }
 

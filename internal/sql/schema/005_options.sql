@@ -1,7 +1,7 @@
 -- +goose Up
-CREATE TABLE answers (
+CREATE TABLE options (
 	id BIGSERIAL NOT NULL,
-	answer VARCHAR(256) NOT NULL,
+	option VARCHAR(256) NOT NULL,
 	correct BOOL NOT NULL,
 	trivia_id UUID NOT NULL REFERENCES trivias(id) ON DELETE CASCADE 
 );

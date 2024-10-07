@@ -26,7 +26,7 @@
             <div class="quiz" type="{{.Type}}" category="{{.Category}}" difficulty="{{.Difficulty}}" selected="">
                 <h2 class="question">{{.Question}}</h2>
                     <ul class="options-list">
-                        {{range $option := .IncorrectAnswers}}
+                        {{range $option := .Options}}
                         <li class="options-list-item">
                             <label>
                                 <input class="option" type="radio" name="option" value="{{$option}}"> {{$option}}
@@ -35,7 +35,7 @@
                         {{end}}
                         <li class="options-list-item">
                             <label>
-                                <input class="option correct" type="radio" name="option" value="{{.CorrectAnswer}}"> {{.CorrectAnswer}}
+                                <input class="option correct" type="radio" name="option" value="{{.CorrectOption}}"> {{.CorrectOption}}
                             </label>
                         </li>
                     </ul>

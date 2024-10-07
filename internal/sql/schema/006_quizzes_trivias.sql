@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE quizzes_trivias (
-	id BIGSERIAL PRIMARY KEY NOT NULL,
+	id UUID PRIMARY KEY NOT NULL,
 	quiz_id UUID NOT NULL REFERENCES quizzes(id),
 	trivia_id UUID NOT NULL REFERENCES trivias(id)
 );

@@ -18,7 +18,7 @@ func CallbackHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
 		}
 
 		// Exchange an authorization code for a token.
-		token, err := auth.Exchange(ctx.Request.Context(), ctx.Query("code"))
+		token, err := auth.Config.Exchange(ctx.Request.Context(), ctx.Query("code"))
 		if err != nil {
 			ctx.String(http.StatusUnauthorized, "Failed to exchange an authorization code for a token.")
 			return

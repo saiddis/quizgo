@@ -5,5 +5,3 @@ $(document).ready(function() {
 	});
 });
 document.querySelector("main").style.height = document.documentElement.clientHeight + "px"
-
-document.querySelector("form").clientHeight

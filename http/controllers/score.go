@@ -13,29 +13,33 @@ import (
 
 func (s *Server) CreateScore(c *gin.Context) {
 	var params struct {
-		HardQuizzesDone   int `json:"hard_quizzes_done"`
-		MediumQuizzesDone int `json:"medium_quizzes_done"`
-		EasyQuizzesDone   int `json:"easy_quizzes_done"`
-		TotalScore        int `json:"total_score"`
+		CompletionTime    int64  `json:"completion_time"`
+		HardQuizzesDone   int    `json:"hard_quizzes_done"`
+		MediumQuizzesDone int    `json:"medium_quizzes_done"`
+		EasyQuizzesDone   int    `json:"easy_quizzes_done"`
+		TotalScore        int    `json:"total_score"`
+		QuizIDStr         string `json:"quiz_id"`
 	}
-	rawParams := make(map[string]interface{})
 	var err error
 
-	if err = c.BindJSON(&rawParams); err != nil {
-		c.JSON(400, gin.H{"error": fmt.Errorf("failed to parse json: %v", err)})
-		return
-	}
+	//rawParams := make(map[string]interface{})
+	//if err = c.BindJSON(&rawParams); err != nil {
+	//	c.JSON(400, gin.H{"error": fmt.Errorf("failed to parse json: %v", err)})
+	//	return
+	//}
 
 	if err = c.BindJSON(&params); err != nil {
 		c.JSON(400, gin.H{"error": fmt.Errorf("failed to parse json: %v", err)})
 		return
 	}
 
-	completionTime, err := extractCompletionTime(rawParams)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
+	log.Printf("%+v", params)
+
+	//completionTime, err := extractCompletionTime(rawParams)
+	//if err != nil {
+	//	c.JSON(400, gin.H{"error": fmt.Errorf("couldn't extract completion time: %v", err)})
+	//	return
+	//}
 
 	session := sessions.Default(c)
 	profile := session.Get("profile")
@@ -47,11 +51,20 @@ func (s *Server) CreateScore(c *gin.Context) {
 	user, err := s.db.GetUserByEmail(c, email)
 	if err != nil {
 		log.Printf("couldn't get user by email: %v", email)
+		c.JSON(400, gin.H{"error": fmt.Errorf("couldn't get user by email: %v", err)})
+		return
 	}
+
+	//t, err := time.ParseDuration(params.CompletionTime)
+	//if err != nil {
+	//	log.Printf("couldn't parse duration: %v", email)
+	//	c.JSON(400, gin.H{"error": fmt.Errorf("couldn't parse duration: %v", err)})
+	//	return
+	//}
 
 	score, err := s.db.CreateScore(c, database.CreateScoreParams{
 		ID:                uuid.New(),
-		CompletionTime:    completionTime.Milliseconds(),
+		CompletionTime:    params.CompletionTime,
 		HardQuizzesDone:   int32(params.HardQuizzesDone),
 		MediumQuizzesDone: int32(params.MediumQuizzesDone),
 		EasyQuizzesDone:   int32(params.EasyQuizzesDone),
@@ -63,7 +76,40 @@ func (s *Server) CreateScore(c *gin.Context) {
 		c.JSON(400, gin.H{"error": fmt.Errorf("failed to create score: %v", err)})
 		return
 	}
+
+	_, err = s.updateScoreID(c, params.QuizIDStr, score.ID)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Errorf("failed to update score_id: %v", err)})
+		log.Printf("failed to update score_id: %v", err)
+		return
+	}
+
 	c.JSON(201, score)
+}
+
+func (s *Server) updateScoreID(c *gin.Context, quizIDStr string, scoreID uuid.UUID) (database.Quiz, error) {
+	quizID, err := uuid.Parse(quizIDStr)
+	if err != nil {
+		return database.Quiz{}, fmt.Errorf("failed to parse %s to uuid: %v", quizIDStr, err)
+	}
+	quiz, err := s.db.UpdateScoreID(c, database.UpdateScoreIDParams{
+		ScoreID: s.newNullUUID(scoreID),
+		ID:      quizID,
+	})
+	if err != nil {
+		return database.Quiz{}, fmt.Errorf("failed to update score_id in quiz: %v", err)
+	}
+	return quiz, nil
+}
+
+func (s *Server) newNullUUID(id uuid.UUID) uuid.NullUUID {
+	if len(id) == 0 {
+		return uuid.NullUUID{}
+	}
+	return uuid.NullUUID{
+		UUID:  id,
+		Valid: true,
+	}
 }
 
 func extractCompletionTime(m map[string]interface{}) (time.Duration, error) {

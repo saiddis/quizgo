@@ -14,3 +14,9 @@ SELECT * FROM quizzes
 WHERE user_id = $1
 ORDER BY created_at DESC;
 
+-- name: UpdateScoreID :one
+UPDATE quizzes
+SET score_id = $1
+WHERE id = $2
+RETURNING *;
+

@@ -7,4 +7,4 @@ CREATE TABLE options (
 );
 
 -- +goose Down
-DROP TABLE answers;
+DROP TABLE options;

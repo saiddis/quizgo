@@ -10,12 +10,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type Option struct {
+	ID       int64
+	Option   string
+	Correct  bool
+	TriviaID uuid.UUID
+}
+
 type Quiz struct {
 	ID           uuid.UUID
 	CreatedAt    time.Time
 	QuizType     string
 	QuizCategory string
 	UserID       uuid.UUID
+	ScoreID      uuid.NullUUID
+}
+
+type QuizzesTrivia struct {
+	ID       uuid.UUID
+	QuizID   uuid.UUID
+	TriviaID uuid.UUID
 }
 
 type Score struct {
@@ -28,9 +42,16 @@ type Score struct {
 	UserID            uuid.UUID
 }
 
+type Trivia struct {
+	ID         uuid.UUID
+	Type       string
+	Category   string
+	Difficulty string
+	Question   string
+}
+
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
-	UpdatedAt time.Time
 	Email     string
 }

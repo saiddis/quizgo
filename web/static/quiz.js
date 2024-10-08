@@ -4,9 +4,17 @@ let index = 0
 let quizContainer = document.querySelector(".quiz-container")
 let nextBtn = document.querySelector(".next-btn")
 let results = document.querySelector(".results")
+let quizID = quizContainer.getAttribute("quiz_id")
 
 class Quizgo {
 	constructor() {
+		this.startedAt = Date.now()
+		this.quizzesDone = new Map([
+			["easy", 0],
+			["medium", 0],
+			["hard", 0]
+		]);
+
 		this.quiz = quizzes[index]
 		this.setUpOptions()
 
@@ -42,6 +50,7 @@ class Quizgo {
 	storeResults() {
 		let correctOptionValue = this.quiz.querySelector(".correct").getAttribute("value")
 		let selectedOptionValue = this.quiz.getAttribute("selected")
+		let difficulty = this.quiz.getAttribute("difficulty")
 
 		let stats = document.createElement("h3")
 		stats.innerText = `
@@ -65,6 +74,8 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 			if (optionValue == correctOptionValue) {
 				if (optionValue == selectedOptionValue) {
 					resultQuiz.lastElementChild.style.color = "green"
+					this.quizzesDone.set(difficulty, this.quizzesDone.get(difficulty) + 1)
+
 				} else {
 					resultQuiz.lastElementChild.style.color = "gray"
 				}
@@ -92,9 +103,46 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 	}
 
 	finishQuiz() {
+		let completedIn = (Date.now() - this.startedAt) / 1000
+		let score = 0
+		let coeff = 1
+		for (let v of this.quizzesDone.values()) {
+			score += v * coeff
+			coeff += 1
+		}
+		let totalScore = score / completedIn * 1000
+
+		totalScore = Math.round(totalScore)
+
+		completedIn *= 1000
+		console.log(completedIn)
+		fetch("/user/quiz/score", {
+			method: "POST",
+			body: JSON.stringify({
+				completion_time: completedIn,
+				hard_quizzes_done: this.quizzesDone.get("hard"),
+				medium_quizzes_done: this.quizzesDone.get("medium"),
+				easy_quizzes_done: this.quizzesDone.get("hard"),
+				total_score: totalScore,
+				quiz_id: quizID
+			}),
+			headers: {
+				"Content-type": "application/json"
+			}
+		}).then(response => response.text()).then(result => console.log(result))
+
 		quizContainer.innerHTML = ""
-		quizContainer.insertAdjacentHTML("afterend", "<h2>Finished</h2>")
-		nextBtn.onclick = ""
+		nextBtn.remove()
+		let stats = document.createElement("div")
+		stats.className = "stats"
+		stats.insertAdjacentHTML("beforeend", ` <h3> Completed in: ${completedIn / 1000} seconds</h3> `)
+		stats.insertAdjacentHTML("beforeend", `<h3>Score: ${totalScore}</h3>`)
+
+		results.prepend(stats)
+		results.insertAdjacentHTML("afterbegin", "<h2>Finished</h2>")
+		let finishButton = results.querySelector(".done-btn")
+		results.appendChild(finishButton)
+
 		results.hidden = false
 	}
 }

@@ -40,7 +40,7 @@ func (s *Server) CreateQuiz(c *gin.Context) {
 		log.Printf("couldn't get user by email: %v", email)
 	}
 
-	_, err = s.db.CreateQuiz(c, database.CreateQuizParams{
+	quiz, err := s.db.CreateQuiz(c, database.CreateQuizParams{
 		ID:           uuid.New(),
 		CreatedAt:    time.Now().UTC(),
 		QuizType:     quizType,
@@ -50,7 +50,7 @@ func (s *Server) CreateQuiz(c *gin.Context) {
 	if err != nil {
 		log.Printf("couldn't create quiz: %v", err)
 	}
-	c.HTML(200, "quiz.html", gin.H{"quizzes": quizzes})
+	c.HTML(200, "quiz.html", gin.H{"quizzes": quizzes, "quiz_id": quiz.ID})
 }
 
 func getAddedURLParams(quizType, quizCategory string) []string {

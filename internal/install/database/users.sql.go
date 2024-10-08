@@ -16,71 +16,49 @@ const createUser = `-- name: CreateUser :one
 INSERT INTO users (
 	id,
 	created_at,
-	updated_at,
 	email
 )
-VALUES ($1, $2, $3, $4)
-RETURNING id, created_at, updated_at, email
+VALUES ($1, $2, $3)
+RETURNING id, created_at, email
 `
 
 type CreateUserParams struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
-	UpdatedAt time.Time
 	Email     string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
-		arg.ID,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-		arg.Email,
-	)
+	row := q.db.QueryRowContext(ctx, createUser, arg.ID, arg.CreatedAt, arg.Email)
 	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Email,
-	)
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email FROM users WHERE email = $1
+SELECT id, created_at, email FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
 	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Email,
-	)
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, created_at, updated_at, email FROM users WHERE id = $1
+SELECT id, created_at, email FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Email,
-	)
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, updated_at, email FROM users
+SELECT id, created_at, email FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -92,12 +70,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	var items []User
 	for rows.Next() {
 		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Email,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.CreatedAt, &i.Email); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

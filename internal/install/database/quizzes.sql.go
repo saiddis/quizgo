@@ -21,7 +21,7 @@ INSERT INTO quizzes (
 	user_id
 )
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, created_at, quiz_type, quiz_category, user_id
+RETURNING id, created_at, quiz_type, quiz_category, user_id, score_id
 `
 
 type CreateQuizParams struct {
@@ -47,12 +47,13 @@ func (q *Queries) CreateQuiz(ctx context.Context, arg CreateQuizParams) (Quiz, e
 		&i.QuizType,
 		&i.QuizCategory,
 		&i.UserID,
+		&i.ScoreID,
 	)
 	return i, err
 }
 
 const getQuizByUserID = `-- name: GetQuizByUserID :many
-SELECT id, created_at, quiz_type, quiz_category, user_id FROM quizzes
+SELECT id, created_at, quiz_type, quiz_category, user_id, score_id FROM quizzes
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -72,6 +73,7 @@ func (q *Queries) GetQuizByUserID(ctx context.Context, userID uuid.UUID) ([]Quiz
 			&i.QuizType,
 			&i.QuizCategory,
 			&i.UserID,
+			&i.ScoreID,
 		); err != nil {
 			return nil, err
 		}
@@ -84,4 +86,30 @@ func (q *Queries) GetQuizByUserID(ctx context.Context, userID uuid.UUID) ([]Quiz
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateScoreID = `-- name: UpdateScoreID :one
+UPDATE quizzes
+SET score_id = $1
+WHERE id = $2
+RETURNING id, created_at, quiz_type, quiz_category, user_id, score_id
+`
+
+type UpdateScoreIDParams struct {
+	ScoreID uuid.NullUUID
+	ID      uuid.UUID
+}
+
+func (q *Queries) UpdateScoreID(ctx context.Context, arg UpdateScoreIDParams) (Quiz, error) {
+	row := q.db.QueryRowContext(ctx, updateScoreID, arg.ScoreID, arg.ID)
+	var i Quiz
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.QuizType,
+		&i.QuizCategory,
+		&i.UserID,
+		&i.ScoreID,
+	)
+	return i, err
 }

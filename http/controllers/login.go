@@ -12,22 +12,22 @@ import (
 
 // Handler for our login.
 func LoginHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
 		state, err := generateRandomState()
 		if err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Save the state inside the session.
-		session := sessions.Default(ctx)
+		session := sessions.Default(c)
 		session.Set("state", state)
 		if err := session.Save(); err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		ctx.Redirect(http.StatusTemporaryRedirect, auth.Config.AuthCodeURL(state))
+		c.Redirect(http.StatusTemporaryRedirect, auth.Config.AuthCodeURL(state))
 	}
 }
 

@@ -66,5 +66,6 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	server.Router.GET("/user", UserHandler)
 	server.Router.GET("/logout", LogoutHandler)
 	server.Router.GET("/user/quiz", server.CreateQuiz)
+	server.Router.POST("/user/quiz/score", server.CreateScore)
 	return server
 }

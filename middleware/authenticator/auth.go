@@ -70,7 +70,6 @@ func (a *Authenticator) VerifyIDToken(c *gin.Context, token *oauth2.Token) (*oid
 		user, err = a.db.CreateUser(c, database.CreateUserParams{
 			ID:        uuid.New(),
 			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
 			Email:     userInfo.Email,
 		})
 		err = userInfo.Claims(user.ID)
@@ -79,11 +78,6 @@ func (a *Authenticator) VerifyIDToken(c *gin.Context, token *oauth2.Token) (*oid
 		}
 	}
 
-	err = c.BindHeader(user.ID)
-	if err != nil {
-
-		log.Println(err)
-	}
 	oidcConfig := &oidc.Config{
 		ClientID: a.Config.ClientID,
 	}

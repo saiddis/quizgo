@@ -3,7 +3,7 @@ let quizzes = document.querySelectorAll(".quiz")
 let index = 0
 let quizContainer = document.querySelector(".quiz-container")
 let nextBtn = document.querySelector(".next-btn")
-let results = document.querySelector(".results")
+let results = document.querySelector(".results-container")
 let quizID = quizContainer.getAttribute("quiz_id")
 
 class Quizgo {
@@ -111,39 +111,37 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 			coeff += 1
 		}
 		let totalScore = score / completedIn * 1000
-
 		totalScore = Math.round(totalScore)
-
-		completedIn *= 1000
-		console.log(completedIn)
-		fetch("/user/quiz/score", {
-			method: "POST",
-			body: JSON.stringify({
-				completion_time: completedIn,
-				hard_quizzes_done: this.quizzesDone.get("hard"),
-				medium_quizzes_done: this.quizzesDone.get("medium"),
-				easy_quizzes_done: this.quizzesDone.get("hard"),
-				total_score: totalScore,
-				quiz_id: quizID
-			}),
-			headers: {
-				"Content-type": "application/json"
-			}
-		}).then(response => response.text()).then(result => console.log(result))
 
 		quizContainer.innerHTML = ""
 		nextBtn.remove()
 		let stats = document.createElement("div")
 		stats.className = "stats"
-		stats.insertAdjacentHTML("beforeend", ` <h3> Completed in: ${completedIn / 1000} seconds</h3> `)
+		stats.insertAdjacentHTML("beforeend", ` <h3> Completed in: ${completedIn} seconds</h3> `)
 		stats.insertAdjacentHTML("beforeend", `<h3>Score: ${totalScore}</h3>`)
 
-		results.prepend(stats)
-		results.insertAdjacentHTML("afterbegin", "<h2>Finished</h2>")
+		results.appendChild(stats)
 		let finishButton = results.querySelector(".done-btn")
 		results.appendChild(finishButton)
-
+		results.classList.add("show")
 		results.hidden = false
+
+		if (quizID) {
+			fetch("/user/quiz/score", {
+				method: "POST",
+				body: JSON.stringify({
+					completion_time: completedIn * 1000,
+					hard_quizzes_done: this.quizzesDone.get("hard"),
+					medium_quizzes_done: this.quizzesDone.get("medium"),
+					easy_quizzes_done: this.quizzesDone.get("hard"),
+					total_score: totalScore,
+					quiz_id: quizID
+				}),
+				headers: {
+					"Content-type": "application/json"
+				}
+			}).then(response => response.text()).then(result => console.log(result))
+		}
 	}
 }
 

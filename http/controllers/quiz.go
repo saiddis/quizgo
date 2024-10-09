@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -16,7 +17,22 @@ var quizzesUrl = []string{
 	//"https://opentdb.com/api.php?type=multiple&amount=2&difficulty=hard",
 }
 
-func (s *Server) CreateQuiz(c *gin.Context) {
+func (s *Server) CreateQuizForGuest(c *gin.Context) {
+	quizType := c.Request.FormValue("type")
+	quizCategory := c.Request.FormValue("category")
+
+	urls := getAddedURLParams(quizType, quizCategory)
+
+	quizzes, err := s.Client.Fetch(c, urls)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.HTML(200, "quiz.html", gin.H{"quizzes": quizzes, "quiz_id": ""})
+
+}
+
+func (s *Server) CreateQuizForUser(c *gin.Context) {
 	quizType := c.Request.FormValue("type")
 	quizCategory := c.Request.FormValue("category")
 
@@ -29,10 +45,19 @@ func (s *Server) CreateQuiz(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
-	profile := session.Get("profile")
 	var email string
-	if profile, ok := profile.(map[string]interface{}); ok {
-		email = profile["email"].(string)
+
+	if profile := session.Get("profile"); profile != nil {
+		log.Println(profile)
+		if profile, ok := profile.(map[string]interface{}); ok {
+			email = profile["email"].(string)
+		} else {
+			c.JSON(400, gin.H{"error": fmt.Errorf("couldn't get email from profile: %v", profile)})
+			return
+		}
+	} else {
+		c.HTML(200, "quiz.html", gin.H{"quizzes": quizzes, "quiz_id": ""})
+		return
 	}
 
 	user, err := s.db.GetUserByEmail(c, email)

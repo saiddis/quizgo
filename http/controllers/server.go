@@ -61,11 +61,15 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	server.Router.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(200, "home.html", nil)
 	})
+
 	server.Router.GET("/login", LoginHandler(server.auth))
 	server.Router.GET("/callback", CallbackHandler(server.auth))
-	server.Router.GET("/user", UserHandler)
 	server.Router.GET("/logout", LogoutHandler)
-	server.Router.GET("/user/quiz", server.CreateQuiz)
-	server.Router.POST("/user/quiz/score", server.CreateScore)
+
+	server.Router.GET("/quiz", server.CreateQuizForGuest)
+
+	server.Router.GET("/user", auth.IsAuthenticated, UserHandler)
+	server.Router.GET("/user/quiz", auth.IsAuthenticated, server.CreateQuizForUser)
+	server.Router.POST("/user/quiz/score", auth.IsAuthenticated, server.CreateScore)
 	return server
 }

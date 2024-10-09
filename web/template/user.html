@@ -15,18 +15,23 @@
 </head>
 
 <body>
-    <main>
-        <a href="/logout">Logout</a>
+    <nav>
+        <div class="logo">
+            <h1>quizgo</h1>
+        </div>
         <div class="profile">
+            <a class="logout-link" href="/logout">Logout</a>
             <img class="avatar" src="{{.picture}}" />
         </div>
+    </nav>
+    <main>
         <form hx-swap="outerHTML" hx-get="/user/quiz" hx-include="#quiz-type, #quiz-category">
-            type: <select name="type" id="quiz-type" class="form-control">&gt;
+            <select name="type" id="quiz-type" class="form-control">&gt;
                 <option value="any">Any Type</option>
                 <option value="multiple">Multiple Choice</option>
                 <option value="boolean">True / False</option>
             </select>
-            category: <select name="category" id="quiz-category" class="form-control">
+            <select name="category" id="quiz-category" class="form-control">
                 <option value="any">Any Category</option>
                 <option value="9">General Knowledge</option>
                 <option value="10">Entertainment: Books</option>
@@ -53,14 +58,10 @@
                 <option value="31">Entertainment: Japanese Anime &amp; Manga</option>
                 <option value="32">Entertainment: Cartoon &amp; Animations</option>
             </select>
-            <button type="submit">Go</button>
+            <button class="button-key" role="button" type="submit">Go</button>
         </form>
     </main>
-
+    <script src="/static/main.js"></script>
 </body>
-<script>
-
-    document.body.style.height = document.documentElement.clientHeight - document.querySelector("form").clientHeight + 'px';
-</script>
 
 </html>

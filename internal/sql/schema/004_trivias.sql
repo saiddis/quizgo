@@ -4,7 +4,7 @@ CREATE TABLE trivias (
 	type VARCHAR(8) NOT NULL,
 	category VARCHAR(64) NOT NULL,
 	difficulty VARCHAR(8) NOT NULL,
-	question TEXT NOT NULL
+	question TEXT NOT NULL UNIQUE
 );
 
 -- +goose Down

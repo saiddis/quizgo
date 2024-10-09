@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"gihub.com/saiddis/quizgo/internal/install/database"
+	_ "github.com/jackc/pgx/v5"
 )
 
 type parameters struct {

@@ -10,6 +10,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
@@ -69,7 +70,7 @@ func (a *Authenticator) VerifyIDToken(c *gin.Context, token *oauth2.Token) (*oid
 	if err != nil {
 		user, err = a.db.CreateUser(c, database.CreateUserParams{
 			ID:        uuid.New(),
-			CreatedAt: time.Now().UTC(),
+			CreatedAt: pgtype.Timestamp{Time: time.Now().UTC(), Valid: true},
 			Email:     userInfo.Email,
 		})
 		err = userInfo.Claims(user.ID)

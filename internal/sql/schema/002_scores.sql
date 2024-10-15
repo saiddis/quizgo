@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE scores (
-	id UUID PRIMARY KEY NOT NULL,
+	id BIGSERIAL PRIMARY KEY NOT NULL,
 	completion_time BIGINT NOT NULL,
 	hard_quizzes_done INT NOT NULL,
 	medium_quizzes_done INT NOT NULL,

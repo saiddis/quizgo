@@ -20,12 +20,15 @@
             <h1>quizgo</h1>
         </div>
         <div class="profile">
+            <!--<button class="history-btn button-key" hx-post="/user/history" hx-target="body"hx-swap="outerHTML">History</button>-->
+
+            <a class="history-link" href="/user/history?email={{.email}}">History</a>
             <a class="logout-link" href="/logout">Logout</a>
             <img class="avatar" src="{{.picture}}" />
         </div>
     </nav>
     <main>
-        <form hx-swap="outerHTML" hx-get="/user/quiz" hx-include="#quiz-type, #quiz-category">
+        <form hx-swap="outerHTML" hx-get="/user/quiz" hx-target="main" hx-include="#quiz-type, #quiz-category">
             <select name="type" id="quiz-type" class="form-control">&gt;
                 <option value="any">Any Type</option>
                 <option value="multiple">Multiple Choice</option>
@@ -58,10 +61,11 @@
                 <option value="31">Entertainment: Japanese Anime &amp; Manga</option>
                 <option value="32">Entertainment: Cartoon &amp; Animations</option>
             </select>
-            <button class="button-key" role="button" type="submit">Go</button>
+            <button class="go-btn button-key" role="button" type="submit">Go</button>
         </form>
     </main>
-    <script src="/static/main.js"></script>
 </body>
+<script src="/static/main.js">
+</script>
 
 </html>

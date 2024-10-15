@@ -1,4 +1,3 @@
-{{ block "quizgo" .}}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,25 +20,31 @@
         </div>
         <button type="" class="next-btn button-key">Next</button>
         <div class="results-container" hidden>
-            <button class="done-btn button-key" hx-get="/user" hx-target="body" hx-swap="outerHTML">Done</button>
+            <button class="done-btn button-key">Done</button>
         </div>
     </main>
 
     <div class="quizzes" hidden>
         {{ range .quizzes }}
-        <div class="quiz" type="{{.Type}}" category="{{.Category}}" difficulty="{{.Difficulty}}" selected="">
+        <div class="quiz" type="{{.Type}}" trivia-id="{{.ID}}" category="{{.Category}}" difficulty="{{.Difficulty}}"
+            selected="" selected-id="">
             <h2 class="question">{{.Question}}</h2>
             <ul class="options-list">
-                {{range $option := .Options}}
+                {{ $optionsID := .OptionsID}}
+
+                {{range $i, $option := .Options}}
                 <li class="options-list-item">
                     <label>
-                        <input class="option" type="radio" name="option" value="{{$option}}"> {{$option}}
+                        <input class="option" type="radio" name="option" value="{{$option}}"
+                            option-id="{{index $optionsID $i}}">
+                        {{$option}}
                     </label>
                 </li>
                 {{end}}
                 <li class="options-list-item">
                     <label>
-                        <input class="option correct" type="radio" name="option" value="{{.CorrectOption}}">
+                        <input class="option correct" type="radio" name="option" value="{{.CorrectOption}}"
+                            option-id="{{.CorrectOptionID}}">
                         {{.CorrectOption}}
                     </label>
                 </li>
@@ -47,9 +52,7 @@
         </div>
         {{ end }}
     </div>
-    <script src="../static/quiz.js">
-    </script>
 </body>
+<script src="/static/quiz.js"></script>
 
 </html>
-{{ end }}

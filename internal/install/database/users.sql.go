@@ -7,9 +7,9 @@ package database
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -24,12 +24,12 @@ RETURNING id, created_at, email
 
 type CreateUserParams struct {
 	ID        uuid.UUID
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamp
 	Email     string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.ID, arg.CreatedAt, arg.Email)
+	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.CreatedAt, arg.Email)
 	var i User
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
@@ -40,7 +40,7 @@ SELECT id, created_at, email FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i User
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
@@ -51,7 +51,7 @@ SELECT id, created_at, email FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.Email)
 	return i, err
@@ -62,7 +62,7 @@ SELECT id, created_at, email FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers)
+	rows, err := q.db.Query(ctx, getUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +74,6 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

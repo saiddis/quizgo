@@ -13,8 +13,8 @@ type UserClaims struct {
 }
 
 // Validate errors out if `ShouldReject` is true.
-func (c *UserClaims) Validate(ctx context.Context) error {
-	if c.ShouldReject {
+func (uc *UserClaims) Validate(c context.Context) error {
+	if uc.ShouldReject {
 		return errors.New("should reject was set to true")
 	}
 	return nil

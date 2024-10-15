@@ -9,7 +9,7 @@ INSERT INTO trivias (
 VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: CreateTrivias :copyForm
+-- name: CreateTrivias :copyfrom
 INSERT INTO trivias (
 	id,
 	type,
@@ -17,8 +17,7 @@ INSERT INTO trivias (
 	difficulty,
 	question
 )
-VALUES ($1, $2, $3, $4, $5)
-RETURNING *;
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: GetTriviaByID :one
 SELECT * FROM trivias

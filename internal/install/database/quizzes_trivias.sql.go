@@ -7,32 +7,34 @@ package database
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
 
 const createQuizTrivia = `-- name: CreateQuizTrivia :one
 INSERT INTO quizzes_trivias (
-	id,
 	quiz_id,
 	trivia_id
 )
-VALUES ($1, $2, $3)
-RETURNING id, quiz_id, trivia_id
+VALUES ($1, $2)
+RETURNING quizzes_trivias.id
 `
 
 type CreateQuizTriviaParams struct {
-	ID       uuid.UUID
-	QuizID   uuid.UUID
+	QuizID   int64
 	TriviaID uuid.UUID
 }
 
-func (q *Queries) CreateQuizTrivia(ctx context.Context, arg CreateQuizTriviaParams) (QuizzesTrivia, error) {
-	row := q.db.QueryRowContext(ctx, createQuizTrivia, arg.ID, arg.QuizID, arg.TriviaID)
-	var i QuizzesTrivia
-	err := row.Scan(&i.ID, &i.QuizID, &i.TriviaID)
-	return i, err
+func (q *Queries) CreateQuizTrivia(ctx context.Context, arg CreateQuizTriviaParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createQuizTrivia, arg.QuizID, arg.TriviaID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+type CreateQuizzesTriviasParams struct {
+	QuizID   int64
+	TriviaID uuid.UUID
 }
 
 const getQuizTriviaByID = `-- name: GetQuizTriviaByID :one
@@ -40,53 +42,39 @@ SELECT id, quiz_id, trivia_id FROM quizzes_trivias
 WHERE id = $1
 `
 
-func (q *Queries) GetQuizTriviaByID(ctx context.Context, id uuid.UUID) (QuizzesTrivia, error) {
-	row := q.db.QueryRowContext(ctx, getQuizTriviaByID, id)
+func (q *Queries) GetQuizTriviaByID(ctx context.Context, id int64) (QuizzesTrivia, error) {
+	row := q.db.QueryRow(ctx, getQuizTriviaByID, id)
 	var i QuizzesTrivia
 	err := row.Scan(&i.ID, &i.QuizID, &i.TriviaID)
 	return i, err
 }
 
 const getQuizzesByTriviaID = `-- name: GetQuizzesByTriviaID :many
-SELECT quizzes_trivias.id, quizzes.id, quizzes.created_at, quizzes.quiz_type, quizzes.quiz_category, quizzes.user_id, quizzes.score_id FROM quizzes_trivias
+SELECT quizzes.id, quizzes.created_at, quizzes.type, quizzes.category, quizzes.user_id, quizzes.score_id FROM quizzes_trivias
 JOIN quizzes ON quizzes_trivias.quiz_id = quizzes.id
 WHERE quizzes_trivias.trivia_id = $1
 `
 
-type GetQuizzesByTriviaIDRow struct {
-	ID           uuid.UUID
-	ID_2         uuid.UUID
-	CreatedAt    time.Time
-	QuizType     string
-	QuizCategory string
-	UserID       uuid.UUID
-	ScoreID      uuid.NullUUID
-}
-
-func (q *Queries) GetQuizzesByTriviaID(ctx context.Context, triviaID uuid.UUID) ([]GetQuizzesByTriviaIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getQuizzesByTriviaID, triviaID)
+func (q *Queries) GetQuizzesByTriviaID(ctx context.Context, triviaID uuid.UUID) ([]Quiz, error) {
+	rows, err := q.db.Query(ctx, getQuizzesByTriviaID, triviaID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetQuizzesByTriviaIDRow
+	var items []Quiz
 	for rows.Next() {
-		var i GetQuizzesByTriviaIDRow
+		var i Quiz
 		if err := rows.Scan(
 			&i.ID,
-			&i.ID_2,
 			&i.CreatedAt,
-			&i.QuizType,
-			&i.QuizCategory,
+			&i.Type,
+			&i.Category,
 			&i.UserID,
 			&i.ScoreID,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -95,32 +83,22 @@ func (q *Queries) GetQuizzesByTriviaID(ctx context.Context, triviaID uuid.UUID) 
 }
 
 const getTriviasByQuizID = `-- name: GetTriviasByQuizID :many
-SELECT quizzes_trivias.id, trivias.id, trivias.type, trivias.category, trivias.difficulty, trivias.question FROM quizzes_trivias
+SELECT trivias.id, trivias.type, trivias.category, trivias.difficulty, trivias.question FROM quizzes_trivias
 JOIN trivias ON quizzes_trivias.trivia_id = trivias.id
 WHERE quizzes_trivias.quiz_id = $1
 `
 
-type GetTriviasByQuizIDRow struct {
-	ID         uuid.UUID
-	ID_2       uuid.UUID
-	Type       string
-	Category   string
-	Difficulty string
-	Question   string
-}
-
-func (q *Queries) GetTriviasByQuizID(ctx context.Context, quizID uuid.UUID) ([]GetTriviasByQuizIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTriviasByQuizID, quizID)
+func (q *Queries) GetTriviasByQuizID(ctx context.Context, quizID int64) ([]Trivia, error) {
+	rows, err := q.db.Query(ctx, getTriviasByQuizID, quizID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTriviasByQuizIDRow
+	var items []Trivia
 	for rows.Next() {
-		var i GetTriviasByQuizIDRow
+		var i Trivia
 		if err := rows.Scan(
 			&i.ID,
-			&i.ID_2,
 			&i.Type,
 			&i.Category,
 			&i.Difficulty,
@@ -129,9 +107,6 @@ func (q *Queries) GetTriviasByQuizID(ctx context.Context, quizID uuid.UUID) ([]G
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

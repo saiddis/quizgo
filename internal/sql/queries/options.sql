@@ -6,13 +6,22 @@ INSERT INTO options (
 	trivia_id
 )
 VALUES ($1, $2, $3, $4)
-RETURNING *;
+RETURNING options.id;
+
+-- name: CreateOptions :copyfrom
+INSERT INTO options (
+	id,
+	option,
+	correct,
+	trivia_id
+)
+VALUES ($1, $2, $3, $4);
 
 -- name: GetOptionByID :one
 SELECT * FROM options
 WHERE id = $1;
 
--- name: GetOptionsByTriviaID :many
-SELECT * FROM options
+-- name: GetOptionsIDByTriviaID :many
+SELECT options.id as id, options.correct as correct FROM options
 JOIN trivias ON trivia_id = trivias.id
 WHERE trivia_id = $1;

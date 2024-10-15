@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>quizgo</title>
+    <script src="https://unpkg.com/htmx.org@2.0.2"
+        integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
+        crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav>
+        <div class="logo">
+            <h1>quizgo</h1>
+        </div>
+        <div class="profile">
+            <a class="history-link" href="/user/history?email={{.email}}">History</a>
+            <a class="logout-link" href="/logout">Logout</a>
+        </div>
+    </nav>
+    <div class="history" quiz_id="{{.quiz_id}}">
+        <div class="records-container">
+        </div>
+        <button class="load-more-btn button-key">Load more</button>
+    </div>
+</body>
+<script src="/static/history.js"></script>
+
+</html>

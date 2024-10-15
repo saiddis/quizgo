@@ -1,6 +1,5 @@
 -- name: CreateScore :one
 INSERT INTO scores (
-	id,
 	completion_time,
 	hard_quizzes_done,
 	medium_quizzes_done,
@@ -8,8 +7,12 @@ INSERT INTO scores (
 	total_score, 
 	user_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING *;
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING scores.id;
+
+-- name: GetScoreByID :one
+SELECT * FROM scores
+WHERE id = $1;
 
 -- name: GetScoresByUserID :many
 SELECT * FROM scores

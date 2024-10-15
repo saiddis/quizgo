@@ -15,7 +15,7 @@ const createTrivia = `-- name: CreateTrivia :one
 INSERT INTO trivias (
 	id,
 	type,
-	category,	
+	category,
 	difficulty,
 	question
 )
@@ -32,7 +32,7 @@ type CreateTriviaParams struct {
 }
 
 func (q *Queries) CreateTrivia(ctx context.Context, arg CreateTriviaParams) (Trivia, error) {
-	row := q.db.QueryRowContext(ctx, createTrivia,
+	row := q.db.QueryRow(ctx, createTrivia,
 		arg.ID,
 		arg.Type,
 		arg.Category,
@@ -50,13 +50,21 @@ func (q *Queries) CreateTrivia(ctx context.Context, arg CreateTriviaParams) (Tri
 	return i, err
 }
 
+type CreateTriviasParams struct {
+	ID         uuid.UUID
+	Type       string
+	Category   string
+	Difficulty string
+	Question   string
+}
+
 const getTriviaByID = `-- name: GetTriviaByID :one
 SELECT id, type, category, difficulty, question FROM trivias
 WHERE id = $1
 `
 
 func (q *Queries) GetTriviaByID(ctx context.Context, id uuid.UUID) (Trivia, error) {
-	row := q.db.QueryRowContext(ctx, getTriviaByID, id)
+	row := q.db.QueryRow(ctx, getTriviaByID, id)
 	var i Trivia
 	err := row.Scan(
 		&i.ID,
@@ -74,7 +82,7 @@ WHERE question = $1
 `
 
 func (q *Queries) GetTriviaByQuestion(ctx context.Context, question string) (Trivia, error) {
-	row := q.db.QueryRowContext(ctx, getTriviaByQuestion, question)
+	row := q.db.QueryRow(ctx, getTriviaByQuestion, question)
 	var i Trivia
 	err := row.Scan(
 		&i.ID,

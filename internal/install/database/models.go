@@ -5,35 +5,41 @@
 package database
 
 import (
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Option struct {
+type Answer struct {
 	ID       int64
+	QuizID   int64
+	TriviaID uuid.UUID
+	OptionID uuid.UUID
+}
+
+type Option struct {
+	ID       uuid.UUID
 	Option   string
 	Correct  bool
 	TriviaID uuid.UUID
 }
 
 type Quiz struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	QuizType     string
-	QuizCategory string
-	UserID       uuid.UUID
-	ScoreID      uuid.NullUUID
+	ID        int64
+	CreatedAt pgtype.Timestamp
+	Type      string
+	Category  string
+	UserID    uuid.UUID
+	ScoreID   pgtype.Int8
 }
 
 type QuizzesTrivia struct {
-	ID       uuid.UUID
-	QuizID   uuid.UUID
+	ID       int64
+	QuizID   int64
 	TriviaID uuid.UUID
 }
 
 type Score struct {
-	ID                uuid.UUID
+	ID                int64
 	CompletionTime    int64
 	HardQuizzesDone   int32
 	MediumQuizzesDone int32
@@ -52,6 +58,6 @@ type Trivia struct {
 
 type User struct {
 	ID        uuid.UUID
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamp
 	Email     string
 }

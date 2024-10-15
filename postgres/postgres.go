@@ -1,13 +1,13 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
 	"log"
 
 	"gihub.com/saiddis/quizgo/internal/install/database"
-	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type parameters struct {
@@ -118,9 +118,20 @@ func addParams(url string) func(string) string {
 }
 
 func connectToDB(url string) (*database.Queries, error) {
-	conn, err := sql.Open("postgres", url)
+	config := PgxPoolConfig(url)
+	connPool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Fatal("Can't connect to database:", err)
 	}
-	return database.New(conn), nil
+
+	connection, err := connPool.Acquire(context.Background())
+	if err != nil {
+		log.Fatal("Error acquiring connnection to the database pool: ", err)
+	}
+
+	err = connection.Ping(context.Background())
+	if err != nil {
+		log.Fatal("Couldn't ping database")
+	}
+	return database.New(connPool), nil
 }

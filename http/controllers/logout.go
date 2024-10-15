@@ -10,7 +10,7 @@ import (
 )
 
 // Handler for our logout.
-func LogoutHandler(ctx *gin.Context) {
+func LogoutHandler(c *gin.Context) {
 
 	env, err := godotenv.Read("../../.env")
 	if err != nil {
@@ -20,18 +20,18 @@ func LogoutHandler(ctx *gin.Context) {
 	clientID := env["AUTH0_CLIENT_ID"]
 	logoutUrl, err := url.Parse("https://" + domain + "/v2/logout")
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	scheme := "http"
-	if ctx.Request.TLS != nil {
+	if c.Request.TLS != nil {
 		scheme = "https"
 	}
 
-	returnTo, err := url.Parse(scheme + "://" + ctx.Request.Host)
+	returnTo, err := url.Parse(scheme + "://" + c.Request.Host)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -40,5 +40,5 @@ func LogoutHandler(ctx *gin.Context) {
 	parameters.Add("client_id", clientID)
 	logoutUrl.RawQuery = parameters.Encode()
 
-	ctx.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
+	c.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
 }

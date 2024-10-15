@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"gihub.com/saiddis/quizgo"
+	"gihub.com/saiddis/quizgo/http/client"
 	"gihub.com/saiddis/quizgo/http/controllers"
 	"gihub.com/saiddis/quizgo/middleware/authenticator"
 	"gihub.com/saiddis/quizgo/postgres"
@@ -22,7 +22,6 @@ func main() {
 	dbName := env["DB_NAME"]
 	dbPassword := env["DB_PASSWORD"]
 
-	// secret := env["AUTH0_CLIENT_SECRET"]
 	fmt.Println(dbName, dbPassword)
 	db, err := postgres.NewDB(dbName,
 		postgres.WithUser("saiddis"),
@@ -38,11 +37,9 @@ func main() {
 		log.Fatalf("Failed to initialize the authenticator: %v", err)
 	}
 
-	client := &http.Client{
+	triviaCaller := client.NewTriviaCaller(&http.Client{
 		Timeout: 30 * time.Second,
-	}
-
-	triviaCaller := quizgo.NewTriviaCaller(client)
+	})
 
 	rtr := controllers.NewServer(db, triviaCaller, auth)
 	rtr.Router.Run()

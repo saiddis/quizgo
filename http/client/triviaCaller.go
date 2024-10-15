@@ -1,4 +1,4 @@
-package quizgo
+package client
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sync"
 
+	"gihub.com/saiddis/quizgo"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,13 +25,13 @@ func NewTriviaCaller(client *http.Client) *TriviaCaller {
 }
 
 type response struct {
-	ResponseCode int      `json:"response_code"`
-	Results      []Trivia `json:"results"`
+	ResponseCode int             `json:"response_code"`
+	Results      []quizgo.Trivia `json:"results"`
 }
 
-func (t *TriviaCaller) Fetch(c *gin.Context, urls []string) (*[]Trivia, error) {
+func (t *TriviaCaller) Fetch(c *gin.Context, urls []string) (*[]quizgo.Trivia, error) {
 
-	trivias := []Trivia{}
+	trivias := []quizgo.Trivia{}
 	triviaCaller := t.call(&trivias)
 	difficulties := map[int]string{
 		0: "medium",
@@ -57,7 +58,7 @@ func (t *TriviaCaller) Fetch(c *gin.Context, urls []string) (*[]Trivia, error) {
 	return &trivias, nil
 }
 
-func (t *TriviaCaller) call(trivias *[]Trivia) func(c *gin.Context, url, difficulty string) {
+func (t *TriviaCaller) call(trivias *[]quizgo.Trivia) func(c *gin.Context, url, difficulty string) {
 	return func(c *gin.Context, url, difficulty string) {
 		url += "&" + "difficulty=" + difficulty
 		req, err := http.NewRequestWithContext(c, http.MethodGet, url, nil)
@@ -73,19 +74,19 @@ func (t *TriviaCaller) call(trivias *[]Trivia) func(c *gin.Context, url, difficu
 
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			c.JSON(400, gin.H{"read error": err.Error()})
+			c.JSON(400, gin.H{"error reading response body": err.Error()})
 			return
 		}
 		defer resp.Body.Close()
 
 		err = json.Unmarshal(data, &t.Response)
 		if err != nil {
-			c.JSON(400, gin.H{"unmarshal error": err.Error()})
+			c.JSON(400, gin.H{"error unmarshalling response": err.Error()})
 			return
 		}
 
 		if t.Response.ResponseCode != 0 {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("failed to fetch data: response code %d", t.Response.ResponseCode)})
+			c.JSON(400, gin.H{"error": fmt.Sprintf("error fetching data: response code %d", t.Response.ResponseCode)})
 			return
 		}
 

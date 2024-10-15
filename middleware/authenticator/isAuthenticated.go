@@ -9,11 +9,11 @@ import (
 
 // IsAuthenticated is a middleware that checks if
 // the user has already been authenticated previously.
-func (a *Authenticator) IsAuthenticated(ctx *gin.Context) {
-	if sessions.Default(ctx).Get("profile") == nil {
-		ctx.Redirect(http.StatusSeeOther, "/")
+func (a *Authenticator) IsAuthenticated(c *gin.Context) {
+	if sessions.Default(c).Get("profile") == nil {
+		c.Redirect(http.StatusSeeOther, "/")
 
 	} else {
-		ctx.Next()
+		c.Next()
 	}
 }

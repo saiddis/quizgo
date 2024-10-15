@@ -6,11 +6,12 @@ import (
 	"gihub.com/saiddis/quizgo/internal/install/database"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserClaims struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        uuid.UUID        `json:"id"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
 	jwt.StandardClaims
 }
 

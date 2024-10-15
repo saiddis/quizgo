@@ -19,31 +19,33 @@ INSERT INTO options (
 	trivia_id
 )
 VALUES ($1, $2, $3, $4)
-RETURNING id, option, correct, trivia_id
+RETURNING options.id
 `
 
 type CreateOptionParams struct {
-	ID       int64
+	ID       uuid.UUID
 	Option   string
 	Correct  bool
 	TriviaID uuid.UUID
 }
 
-func (q *Queries) CreateOption(ctx context.Context, arg CreateOptionParams) (Option, error) {
-	row := q.db.QueryRowContext(ctx, createOption,
+func (q *Queries) CreateOption(ctx context.Context, arg CreateOptionParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createOption,
 		arg.ID,
 		arg.Option,
 		arg.Correct,
 		arg.TriviaID,
 	)
-	var i Option
-	err := row.Scan(
-		&i.ID,
-		&i.Option,
-		&i.Correct,
-		&i.TriviaID,
-	)
-	return i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+type CreateOptionsParams struct {
+	ID       uuid.UUID
+	Option   string
+	Correct  bool
+	TriviaID uuid.UUID
 }
 
 const getOptionByID = `-- name: GetOptionByID :one
@@ -51,8 +53,8 @@ SELECT id, option, correct, trivia_id FROM options
 WHERE id = $1
 `
 
-func (q *Queries) GetOptionByID(ctx context.Context, id int64) (Option, error) {
-	row := q.db.QueryRowContext(ctx, getOptionByID, id)
+func (q *Queries) GetOptionByID(ctx context.Context, id uuid.UUID) (Option, error) {
+	row := q.db.QueryRow(ctx, getOptionByID, id)
 	var i Option
 	err := row.Scan(
 		&i.ID,
@@ -63,50 +65,30 @@ func (q *Queries) GetOptionByID(ctx context.Context, id int64) (Option, error) {
 	return i, err
 }
 
-const getOptionsByTriviaID = `-- name: GetOptionsByTriviaID :many
-SELECT options.id, option, correct, trivia_id, trivias.id, type, category, difficulty, question FROM options
+const getOptionsIDByTriviaID = `-- name: GetOptionsIDByTriviaID :many
+SELECT options.id as id, options.correct as correct FROM options
 JOIN trivias ON trivia_id = trivias.id
 WHERE trivia_id = $1
 `
 
-type GetOptionsByTriviaIDRow struct {
-	ID         int64
-	Option     string
-	Correct    bool
-	TriviaID   uuid.UUID
-	ID_2       uuid.UUID
-	Type       string
-	Category   string
-	Difficulty string
-	Question   string
+type GetOptionsIDByTriviaIDRow struct {
+	ID      uuid.UUID
+	Correct bool
 }
 
-func (q *Queries) GetOptionsByTriviaID(ctx context.Context, triviaID uuid.UUID) ([]GetOptionsByTriviaIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOptionsByTriviaID, triviaID)
+func (q *Queries) GetOptionsIDByTriviaID(ctx context.Context, triviaID uuid.UUID) ([]GetOptionsIDByTriviaIDRow, error) {
+	rows, err := q.db.Query(ctx, getOptionsIDByTriviaID, triviaID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetOptionsByTriviaIDRow
+	var items []GetOptionsIDByTriviaIDRow
 	for rows.Next() {
-		var i GetOptionsByTriviaIDRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Option,
-			&i.Correct,
-			&i.TriviaID,
-			&i.ID_2,
-			&i.Type,
-			&i.Category,
-			&i.Difficulty,
-			&i.Question,
-		); err != nil {
+		var i GetOptionsIDByTriviaIDRow
+		if err := rows.Scan(&i.ID, &i.Correct); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

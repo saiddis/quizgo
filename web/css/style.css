@@ -56,6 +56,7 @@ main {
 }
 
 nav {
+	top: 0;
 	font-size: 14px;
 	display: flex;
 	position: fixed;
@@ -63,6 +64,8 @@ nav {
 	justify-content: space-between;
 	align-items: center;
 	width: 99%;
+	background-color: var(--baby-powder);
+	z-index: 2;
 }
 
 .login {
@@ -210,4 +213,28 @@ select::-ms-expand {
 	gap: 1rem;
 	width: 40%;
 	scroll-behavior: auto;
+}
+
+
+.records-container {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.history {
+	font-size: 16px;
+	display: flex;
+	flex-direction: column;
+}
+
+.load-more-btn {
+	align-self: center;
+	width: 10em;
+}
+
+.history ul {
+	padding-left: 20em;
+	list-style-type: none;
 }

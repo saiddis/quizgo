@@ -13,7 +13,6 @@ import (
 
 const createScore = `-- name: CreateScore :one
 INSERT INTO scores (
-	id,
 	completion_time,
 	hard_quizzes_done,
 	medium_quizzes_done,
@@ -21,12 +20,11 @@ INSERT INTO scores (
 	total_score, 
 	user_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, completion_time, hard_quizzes_done, medium_quizzes_done, easy_quizzes_done, total_score, user_id
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING scores.id
 `
 
 type CreateScoreParams struct {
-	ID                uuid.UUID
 	CompletionTime    int64
 	HardQuizzesDone   int32
 	MediumQuizzesDone int32
@@ -35,9 +33,8 @@ type CreateScoreParams struct {
 	UserID            uuid.UUID
 }
 
-func (q *Queries) CreateScore(ctx context.Context, arg CreateScoreParams) (Score, error) {
-	row := q.db.QueryRowContext(ctx, createScore,
-		arg.ID,
+func (q *Queries) CreateScore(ctx context.Context, arg CreateScoreParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createScore,
 		arg.CompletionTime,
 		arg.HardQuizzesDone,
 		arg.MediumQuizzesDone,
@@ -45,6 +42,18 @@ func (q *Queries) CreateScore(ctx context.Context, arg CreateScoreParams) (Score
 		arg.TotalScore,
 		arg.UserID,
 	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getScoreByID = `-- name: GetScoreByID :one
+SELECT id, completion_time, hard_quizzes_done, medium_quizzes_done, easy_quizzes_done, total_score, user_id FROM scores
+WHERE id = $1
+`
+
+func (q *Queries) GetScoreByID(ctx context.Context, id int64) (Score, error) {
+	row := q.db.QueryRow(ctx, getScoreByID, id)
 	var i Score
 	err := row.Scan(
 		&i.ID,
@@ -64,7 +73,7 @@ WHERE user_id = $1
 `
 
 func (q *Queries) GetScoresByUserID(ctx context.Context, userID uuid.UUID) ([]Score, error) {
-	rows, err := q.db.QueryContext(ctx, getScoresByUserID, userID)
+	rows, err := q.db.Query(ctx, getScoresByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +93,6 @@ func (q *Queries) GetScoresByUserID(ctx context.Context, userID uuid.UUID) ([]Sc
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

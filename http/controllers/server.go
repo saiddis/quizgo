@@ -45,6 +45,8 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 		Client: client,
 	}
 
+	html := newTemplate()
+	server.Router.SetHTMLTemplate(html.templates)
 	// To store custom types in our cookies,
 	// we must first register them using gob.Register
 	gob.Register(map[string]interface{}{})
@@ -55,21 +57,26 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	server.Router.Static("/css", "../../web/css")
 	server.Router.Static("/static", "../../web/static")
 
-	html := newTemplate()
-	server.Router.SetHTMLTemplate(html.templates)
-
 	server.Router.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(200, "home.html", nil)
 	})
-
 	server.Router.GET("/login", LoginHandler(server.auth))
 	server.Router.GET("/callback", CallbackHandler(server.auth))
 	server.Router.GET("/logout", LogoutHandler)
-
 	server.Router.GET("/quiz", server.CreateQuizForGuest)
 
-	server.Router.GET("/user", auth.IsAuthenticated, UserHandler)
-	server.Router.GET("/user/quiz", auth.IsAuthenticated, server.CreateQuizForUser)
-	server.Router.POST("/user/quiz/score", auth.IsAuthenticated, server.CreateScore)
+	user := server.Router.Group("/user")
+	user.Use(auth.IsAuthenticated)
+	user.GET("/", UserHandler)
+	user.GET("/quiz", server.CreateQuizForUser)
+	user.POST("/quiz/score", server.CreateScore)
+	user.POST("/quiz/answer", server.CreateAnswer)
+
+	user.GET("/history", server.GetLastQuizIDByEmail)
+	user.POST("/history/load", server.QuizzesPagination)
+	user.GET("/history/score", server.GetScore)
+	user.GET("/history/trivia", server.GetTrivias)
+	user.GET("/history/answer", server.GetAnswersByQuizID)
+	user.GET("/history/option", server.GetOptionByAnswerID)
 	return server
 }

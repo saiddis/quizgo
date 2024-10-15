@@ -1,13 +1,18 @@
-let quizStore = document.querySelector(".quizzes")
-let quizzes = document.querySelectorAll(".quiz")
-let index = 0
-let quizContainer = document.querySelector(".quiz-container")
-let nextBtn = document.querySelector(".next-btn")
-let results = document.querySelector(".results-container")
-let quizID = quizContainer.getAttribute("quiz_id")
+document.querySelector("main").style.top = document.querySelector("nav").clientHeight + "px"
+document.querySelector(".results-container").style.top = document.querySelector("nav").clientHeight + "px"
 
+document.querySelector(".done-btn").addEventListener("click", function() {
+	location.reload()
+})
 class Quizgo {
 	constructor() {
+		this.quizStore = document.querySelector(".quizzes")
+		this.quizzes = document.querySelectorAll(".quiz")
+		this.index = 0
+		this.quizContainer = document.querySelector(".quiz-container")
+		this.nextBtn = document.querySelector(".next-btn")
+		this.results = document.querySelector(".results-container")
+		this.quizID = this.quizContainer.getAttribute("quiz_id")
 		this.startedAt = Date.now()
 		this.quizzesDone = new Map([
 			["easy", 0],
@@ -15,11 +20,11 @@ class Quizgo {
 			["hard", 0]
 		]);
 
-		this.quiz = quizzes[index]
+		this.quiz = this.quizzes[this.index]
 		this.setUpOptions()
 
-		quizContainer.append(this.quiz)
-		nextBtn.onclick = () => {
+		this.quizContainer.append(this.quiz)
+		this.nextBtn.onclick = () => {
 			this.nextQuiz()
 		}
 	}
@@ -43,18 +48,19 @@ class Quizgo {
 		this.options.forEach(option => {
 			option.onchange = () => {
 				this.quiz.setAttribute("selected", option.getAttribute("value"))
+				this.quiz.setAttribute("selected-id", option.getAttribute("option-id"))
 			}
 		})
 	}
 
-	storeResults() {
+	async storeResults() {
 		let correctOptionValue = this.quiz.querySelector(".correct").getAttribute("value")
 		let selectedOptionValue = this.quiz.getAttribute("selected")
 		let difficulty = this.quiz.getAttribute("difficulty")
 
 		let stats = document.createElement("h3")
 		stats.innerText = `
-Quiz #${index + 1}: ${this.quiz.querySelector(".question").innerHTML}
+Quiz #${this.index + 1}: ${this.quiz.querySelector(".question").innerHTML}
 Type: ${this.quiz.getAttribute("type")}
 Category: ${this.quiz.getAttribute("category")}
 Difficulty: ${this.quiz.getAttribute("difficulty")}`
@@ -69,7 +75,7 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 
 			resultQuiz.insertAdjacentHTML("beforeend", `<li class="result-option">${optionValue}</li>`)
 
-			results.append(resultQuiz)
+			this.results.append(resultQuiz)
 
 			if (optionValue == correctOptionValue) {
 				if (optionValue == selectedOptionValue) {
@@ -85,6 +91,24 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 				resultQuiz.lastElementChild.style.color = "red"
 			}
 		})
+		let answerID = await this.postAnswer(this.quizID, this.quiz.getAttribute("selected-id"))
+		console.log(answerID)
+	}
+
+	async postAnswer(quizID, optionID) {
+		const response = await fetch("/user/quiz/answer", {
+			method: "POST",
+			body: JSON.stringify({
+				quiz_id: quizID,
+				trivia_id: this.quiz.getAttribute("trivia-id"),
+				option_id: optionID
+			}),
+			headers: {
+				"Content-type": "application/json"
+			}
+		})
+		const answerID = await response.json()
+		return answerID
 	}
 
 	nextQuiz() {
@@ -92,13 +116,13 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 			return false
 		}
 		this.storeResults()
-		if (index == quizzes.length - 1) {
+		if (this.index == this.quizzes.length - 1) {
 			this.finishQuiz()
 			return
 		}
-		index += 1
-		this.quiz = quizzes[index]
-		quizContainer.replaceChildren(this.quiz)
+		this.index += 1
+		this.quiz = this.quizzes[this.index]
+		this.quizContainer.replaceChildren(this.quiz)
 		this.setUpOptions()
 	}
 
@@ -113,20 +137,20 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 		let totalScore = score / completedIn * 1000
 		totalScore = Math.round(totalScore)
 
-		quizContainer.innerHTML = ""
-		nextBtn.remove()
+		this.quizContainer.innerHTML = ""
+		this.nextBtn.remove()
 		let stats = document.createElement("div")
 		stats.className = "stats"
 		stats.insertAdjacentHTML("beforeend", ` <h3> Completed in: ${completedIn} seconds</h3> `)
 		stats.insertAdjacentHTML("beforeend", `<h3>Score: ${totalScore}</h3>`)
 
-		results.appendChild(stats)
-		let finishButton = results.querySelector(".done-btn")
-		results.appendChild(finishButton)
-		results.classList.add("show")
-		results.hidden = false
+		this.results.appendChild(stats)
+		let finishButton = this.results.querySelector(".done-btn")
+		this.results.appendChild(finishButton)
+		this.results.classList.add("show")
+		this.results.hidden = false
 
-		if (quizID) {
+		if (this.quizID) {
 			fetch("/user/quiz/score", {
 				method: "POST",
 				body: JSON.stringify({
@@ -135,7 +159,7 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 					medium_quizzes_done: this.quizzesDone.get("medium"),
 					easy_quizzes_done: this.quizzesDone.get("hard"),
 					total_score: totalScore,
-					quiz_id: quizID
+					quiz_id: this.quizID
 				}),
 				headers: {
 					"Content-type": "application/json"
@@ -145,4 +169,4 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 	}
 }
 
-let quizgo = new Quizgo();
+new Quizgo()

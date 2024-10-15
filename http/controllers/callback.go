@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 
 	"gihub.com/saiddis/quizgo/middleware/authenticator"
@@ -9,40 +10,43 @@ import (
 )
 
 func CallbackHandler(auth *authenticator.Authenticator) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		session := sessions.Default(ctx)
-		if ctx.Query("state") != session.Get("state") {
-			ctx.String(http.StatusBadRequest, "Invalid state parameter.")
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		if c.Query("state") != session.Get("state") {
+			c.String(http.StatusBadRequest, "Invalid state parameter.")
 			return
 		}
 
 		// Exchange an authorization code for a token.
-		token, err := auth.Config.Exchange(ctx.Request.Context(), ctx.Query("code"))
+		token, err := auth.Config.Exchange(c.Request.Context(), c.Query("code"))
 		if err != nil {
-			ctx.String(http.StatusUnauthorized, "Failed to exchange an authorization code for a token.")
+			c.String(http.StatusUnauthorized, "Failed to exchange an authorization code for a token.")
 			return
 		}
 
-		idToken, err := auth.VerifyIDToken(ctx, token)
+		idToken, err := auth.VerifyIDToken(c, token)
 		if err != nil {
-			ctx.String(http.StatusInternalServerError, "Failed to verify ID Token.")
+			c.String(http.StatusInternalServerError, "Failed to verify ID Token.")
+			log.Printf("failed to verify id token: %v", token)
+			log.Printf("session: %v", session)
+			log.Printf("idToken: %v", idToken)
 			return
 		}
 
 		var profile map[string]interface{}
 		if err := idToken.Claims(&profile); err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		session.Set("access_token", token.AccessToken)
 		session.Set("profile", profile)
 		if err := session.Save(); err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Redirect to logged in page.
-		ctx.Redirect(http.StatusTemporaryRedirect, "/user")
+		c.Redirect(http.StatusTemporaryRedirect, "/user")
 	}
 }

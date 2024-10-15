@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 	"strings"
 
 	"gihub.com/saiddis/quizgo/internal/install/database"
@@ -13,15 +15,19 @@ func (s *Server) GetLastQuizIDByEmail(c *gin.Context) {
 	if strings.Contains(email, "%40") {
 		email = strings.Replace(email, "%40", "@", 1)
 	}
+
+	log.Println(email)
 	user, err := s.db.GetUserByEmail(c, email)
 	if err != nil {
 		c.JSON(400, gin.H{"error": fmt.Errorf("error retrieving user_id by email: %v", err)})
+		log.Printf("error retrieving user_id by email: %v", err)
 		return
 	}
 
 	quiz, err := s.db.GetLastQuizByUserID(c, user.ID)
 	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Errorf("error retrieving user_id from conetext: %v", err)})
+		c.JSON(400, gin.H{"error": fmt.Errorf("error retrieving quiz_id by user_id: %v", err)})
+		log.Printf("error retrieving quiz_id by user_id: %v", err)
 		return
 	}
 
@@ -29,12 +35,18 @@ func (s *Server) GetLastQuizIDByEmail(c *gin.Context) {
 }
 
 func (s *Server) QuizzesPagination(c *gin.Context) {
-	var params struct {
-		LastQuizID int `json:"quiz_id"`
-	}
-	err := c.BindJSON(&params)
+	//var params struct {
+	//	LastQuizID int `json:"quiz_id"`
+	//}
+	//err := c.BindJSON(&params)
+	//if err != nil {
+	//	c.JSON(400, gin.H{"error": fmt.Errorf("error unmarshalling quiz_id from context: %v", err)})
+	//	return
+	//}
+	lastQuizIDStr := c.Request.FormValue("id")
+	lastQuizID, err := strconv.Atoi(lastQuizIDStr)
 	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Errorf("error unmarshalling quiz_id from context: %v", err)})
+		c.JSON(400, gin.H{"error": fmt.Errorf("error converting quiz_id: %v", err)})
 		return
 	}
 	userID, err := s.GetUserIDByContext(c)
@@ -43,12 +55,12 @@ func (s *Server) QuizzesPagination(c *gin.Context) {
 		return
 	}
 
-	quizzes, err := s.db.PaginateQuizzes(c, database.PaginateQuizzesParams{
+	quizzes, err := s.db.QuizzesPagination(c, database.QuizzesPaginationParams{
 		UserID: userID,
-		ID:     int64(params.LastQuizID),
+		ID:     int64(lastQuizID),
 	})
 	if err != nil {
-		c.JSON(400, gin.H{"error": fmt.Errorf("error loading history data: %v", err)})
+		c.JSON(400, gin.H{"error": fmt.Errorf("error retrieving history data: %v", err)})
 		return
 	}
 

@@ -23,12 +23,20 @@
             <a href="/user">Back</a>
         </div>
     </nav>
-    <div class="history" quiz_id="{{.quiz_id}}">
-        <div class="records-container">
-        </div>
+    <main score="{{.score}}">
+        <table>
+            <tr>
+                <th>Email</th>
+                <th>Easy quizzes</th>
+                <th>Medium quizzes</th>
+                <th>Hard quizzes</th>
+                <th>Completion time</th>
+                <th>Score</th>
+            </tr>
+        </table>
         <button class="load-more-btn button-key">Load more</button>
-    </div>
+    </main>
 </body>
-<script src="/static/history.js"></script>
+<script src="/static/leaderboard.js"></script>
 
 </html>

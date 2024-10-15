@@ -125,7 +125,7 @@ func (q *Queries) GetUserIDByQuizID(ctx context.Context, id int64) (uuid.UUID, e
 	return user_id, err
 }
 
-const paginateQuizzes = `-- name: PaginateQuizzes :many
+const quizzesPagination = `-- name: QuizzesPagination :many
 SELECT quizzes.created_at, quizzes.type, quizzes.category, quizzes.score_id as score_id, quizzes.id as id FROM quizzes
 JOIN users ON quizzes.user_id = users.id
 WHERE quizzes.user_id = $1 AND quizzes.id < $2
@@ -133,12 +133,12 @@ ORDER BY quizzes.id DESC
 LIMIT 5
 `
 
-type PaginateQuizzesParams struct {
+type QuizzesPaginationParams struct {
 	UserID uuid.UUID
 	ID     int64
 }
 
-type PaginateQuizzesRow struct {
+type QuizzesPaginationRow struct {
 	CreatedAt pgtype.Timestamp
 	Type      string
 	Category  string
@@ -146,15 +146,15 @@ type PaginateQuizzesRow struct {
 	ID        int64
 }
 
-func (q *Queries) PaginateQuizzes(ctx context.Context, arg PaginateQuizzesParams) ([]PaginateQuizzesRow, error) {
-	rows, err := q.db.Query(ctx, paginateQuizzes, arg.UserID, arg.ID)
+func (q *Queries) QuizzesPagination(ctx context.Context, arg QuizzesPaginationParams) ([]QuizzesPaginationRow, error) {
+	rows, err := q.db.Query(ctx, quizzesPagination, arg.UserID, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []PaginateQuizzesRow
+	var items []QuizzesPaginationRow
 	for rows.Next() {
-		var i PaginateQuizzesRow
+		var i QuizzesPaginationRow
 		if err := rows.Scan(
 			&i.CreatedAt,
 			&i.Type,

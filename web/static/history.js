@@ -4,16 +4,24 @@ const recordsContainer = document.querySelector(".records-container")
 const loadMoreBtn = document.querySelector(".load-more-btn")
 main.style.paddingTop = nav.clientHeight + "px"
 
-let lastQuizID = parseInt(main.getAttribute("quiz_id"))
-console.log(lastQuizID)
 
 window.onload = async function() {
-	let quizzes = await fetchQuizzes(lastQuizID)
+	const quizID = main.getAttribute("quiz_id")
+	if (!quizID) {
+		recordsContainer.insertAdjacentHTML("beforeend", "<h2>No history data found</h2>")
+		return false
+	}
+
+	let lastQuizID = parseInt(quizID)
+	console.log(lastQuizID)
+	let quizzes = await fetchQuizzes(lastQuizID + 1)
 	lastQuizID = quizzes[quizzes.length - 1].ID
 	console.log(lastQuizID)
+	appendRecords(recordsContainer, quizzes)
 
-	loadMoreBtn.onclick = async () => {
-		if (quizzes.length < 5) {
+	loadMoreBtn.onclick = async function() {
+		if (!quizzes || quizzes.length < 5) {
+			this.innerHTML = "No more data"
 			return false
 		}
 
@@ -21,17 +29,16 @@ window.onload = async function() {
 		console.log(quizzes)
 		lastQuizID = quizzes[quizzes.length - 1].ID
 		console.log(lastQuizID)
-		for (let quiz of quizzes) {
-			console.log(quiz)
-			let recordNode = createRecordsNode(Object.entries(quiz))
-			recordsContainer.appendChild(recordNode)
-		}
+		appendRecords(recordsContainer, quizzes)
 	}
 
+}
+
+function appendRecords(dest, quizzes) {
 	for (let quiz of quizzes) {
 		console.log(quiz)
-		let recordNode = createRecordsNode(Object.entries(quiz))
-		recordsContainer.appendChild(recordNode)
+		const recordNode = createRecordsNode(Object.entries(quiz))
+		dest.append(recordNode)
 	}
 }
 
@@ -60,41 +67,54 @@ function createRecordsNode(obj) {
 		}
 	}
 
-	recordsNode.querySelector(".trivias").addEventListener("click", async function(event) {
-		if (event.target != this.firstElementChild) {
-			return false
-		}
-		if (this.childNodes.length > 1) {
-			if (!this.lastElementChild.hidden) {
-				this.lastElementChild.hidden = true
-			} else {
-				this.lastElementChild.hidden = false
+	let itemTrivias = recordsNode.querySelector(".trivias")
+	const quizID = itemTrivias.getAttribute("quiz-id")
+	console.log(quizID)
+	if (quizID != null) {
+		itemTrivias.onclick = async function(event) {
+			if (event.target != this.firstElementChild || event.defaultPrevented) {
+				return false
 			}
-			return false
-		}
-		let quizID = this.getAttribute("quiz-id")
-		let trivias = await fetchTrivias(quizID)
-		console.log(trivias)
-		appendTriviasContainer(this, trivias, quizID)
-	})
-
-	recordsNode.querySelector(".score").addEventListener("click", async function(event) {
-		if (event.target != this.firstElementChild) {
-			return false
-		}
-		if (this.childNodes.length > 1) {
-			if (!this.lastElementChild.hidden) {
-				this.lastElementChild.hidden = true
-			} else {
-				this.lastElementChild.hidden = false
+			if (this.childNodes.length > 1) {
+				if (!this.lastElementChild.hidden) {
+					this.lastElementChild.hidden = true
+				} else {
+					this.lastElementChild.hidden = false
+				}
+				return false
 			}
-			return false
+			let trivias = await fetchTrivias(quizID)
+			console.log(trivias)
+			appendTriviasContainer(this, trivias, quizID)
 		}
+	}
 
-		let response = await fetchScore(this.getAttribute("score-id"))
-		let scoreNode = createScoreNode(Object.entries(response))
-		this.append(scoreNode)
-	})
+	let itemScore = recordsNode.querySelector(".score")
+	const scoreID = itemScore.getAttribute("score-id")
+	console.log(scoreID)
+	if (scoreID != null) {
+		itemScore.onclick = async function(event) {
+			if (event.target != this.firstElementChild) {
+				return false
+			}
+			if (this.childNodes.length > 1) {
+				if (!this.lastElementChild.hidden) {
+					this.lastElementChild.hidden = true
+				} else {
+					this.lastElementChild.hidden = false
+				}
+				return false
+			}
+
+			let response = await fetchScore(scoreID)
+			if (response.Error) {
+				this.innerHTML += " The quiz was not completed"
+				this.onclick = ""
+				return false
+			}
+			appendScore(this, Object.entries(response))
+		}
+	}
 
 
 	return recordsNode
@@ -104,10 +124,18 @@ async function appendTriviasContainer(dest, arr, quizID) {
 	const triviasContainer = document.createElement("div")
 	triviasContainer.className = "trivias-container"
 	const answers = await fetchAnswers(quizID)
+	if (answers == null) {
+		dest.innerHTML += " The quiz was not completed"
+		dest.onclick = ""
+		return
+	}
 	let triviasID = []
 	let answersID = []
 	for (let answer of answers) {
 		for (let [k, v] of Object.entries(answer)) {
+			if (!answer) {
+				continue
+			}
 			switch (k) {
 				case "ID":
 					answersID.push(v)
@@ -175,10 +203,10 @@ async function appendOption(dest, answerID) {
 }
 
 
-function createScoreNode(data) {
+function appendScore(dest, obj) {
 	const scoreNode = document.createElement("ul")
 	scoreNode.className = "score-list"
-	for (let [k, v] of data) {
+	for (let [k, v] of obj) {
 		switch (k) {
 			case "CompletionTime":
 				scoreNode.insertAdjacentHTML("beforeend", `<li><h3>Completion time: ${v}</h3></li>`)
@@ -189,7 +217,7 @@ function createScoreNode(data) {
 		}
 	}
 
-	return scoreNode
+	dest.append(scoreNode)
 }
 
 
@@ -215,6 +243,11 @@ async function fetchAnswers(quizID) {
 			}
 		}
 	)
+	if (!response.ok) {
+		return {
+			Error: "The quiz was not answered"
+		}
+	}
 	const answers = await response.json()
 	return answers
 }
@@ -228,21 +261,13 @@ async function fetchTrivias(quizID) {
 			}
 		}
 	)
+	if (!response.ok) {
+		return {
+			Error: "The quiz was not completed"
+		}
+	}
 	const trivias = await response.json()
 	return trivias
-}
-
-async function fetchMoreQuizzes(quizID) {
-	const response = await fetch(`/user/history/load?id=${quizID}`,
-		{
-			method: "GET",
-			headers: {
-				"Content-type": "application/json"
-			}
-		}
-	)
-	const quizzes = await response.json()
-	return quizzes
 }
 
 async function fetchScore(scoreID) {
@@ -254,38 +279,29 @@ async function fetchScore(scoreID) {
 			}
 		}
 	)
+	if (!response.ok) {
+		return {
+			Error: "The quiz was not completed"
+		}
+	}
 	const score = await response.json()
 	return score
 }
 
 async function fetchQuizzes(quizID) {
-	const response = await fetch("/user/history/load",
+	const response = await fetch(`/user/history/load?id=${quizID}`,
 		{
-			method: "POST",
-			body: JSON.stringify({
-				quiz_id: quizID
-			}),
+			method: "GET",
 			headers: {
 				"Content-type": "application/json"
 			}
 		}
 	)
+	if (!response.ok) {
+		return {
+			Error: "No history data found"
+		}
+	}
 	const quizzes = await response.json()
 	return quizzes
-}
-
-async function fetchQuizID() {
-	const response = await fetch("/user/history",
-		{
-			method: "POST",
-			body: JSON.stringify({
-				email: document.querySelector(".profile").getAttribute("email")
-			}),
-			headers: {
-				"Content-type": "application/json"
-			}
-		}
-	)
-	const quizID = await response.json()
-	return quizID
 }

@@ -19,12 +19,13 @@
         <div class="logo">
             <h1>quizgo</h1>
         </div>
-        <div class="login">
+        <div class="profile">
             <a href="/login">SignIn</a>
+            <a href="/leaderboard">Leaderboard</a>
         </div>
     </nav>
     <main>
-        <form hx-swap="outerHTML" hx-get="/quiz" hx-include="#quiz-type, #quiz-category">
+        <form hx-swap="outerHTML" hx-get="/quiz" hx-target="main" hx-include="#quiz-type, #quiz-category">
             <select name="type" id="quiz-type" class="form-control">&gt;
                 <option value="any">Any Type</option>
                 <option value="multiple">Multiple Choice</option>

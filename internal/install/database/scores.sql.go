@@ -99,3 +99,83 @@ func (q *Queries) GetScoresByUserID(ctx context.Context, userID uuid.UUID) ([]Sc
 	}
 	return items, nil
 }
+
+const getTheHighestTotalScore = `-- name: GetTheHighestTotalScore :one
+SELECT max(scores.total_score) as score FROM scores
+GROUP BY scores.total_score
+ORDER BY scores.total_score DESC
+LIMIT 1
+`
+
+func (q *Queries) GetTheHighestTotalScore(ctx context.Context) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getTheHighestTotalScore)
+	var score interface{}
+	err := row.Scan(&score)
+	return score, err
+}
+
+const usersBestScorePagination = `-- name: UsersBestScorePagination :many
+WITH max_scores as (
+    SELECT 
+        user_id, 
+        max(total_score) as max_score
+    FROM 
+        scores
+    WHERE 
+        scores.total_score > 0 AND scores.total_score < $1
+    GROUP BY 
+        user_id
+)
+SELECT 
+    users.email, 
+    scores.easy_quizzes_done, 
+    scores.medium_quizzes_done, 
+    scores.hard_quizzes_done, 
+    scores.completion_time, 
+    scores.total_score as score
+FROM 
+    max_scores
+JOIN 
+    scores ON scores.user_id = max_scores.user_id AND scores.total_score = max_scores.max_score
+RIGHT JOIN 
+    users ON scores.user_id = users.id
+ORDER BY 
+    scores.total_score DESC
+LIMIT 10
+`
+
+type UsersBestScorePaginationRow struct {
+	Email             string
+	EasyQuizzesDone   int32
+	MediumQuizzesDone int32
+	HardQuizzesDone   int32
+	CompletionTime    int64
+	Score             int32
+}
+
+func (q *Queries) UsersBestScorePagination(ctx context.Context, totalScore int32) ([]UsersBestScorePaginationRow, error) {
+	rows, err := q.db.Query(ctx, usersBestScorePagination, totalScore)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UsersBestScorePaginationRow
+	for rows.Next() {
+		var i UsersBestScorePaginationRow
+		if err := rows.Scan(
+			&i.Email,
+			&i.EasyQuizzesDone,
+			&i.MediumQuizzesDone,
+			&i.HardQuizzesDone,
+			&i.CompletionTime,
+			&i.Score,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

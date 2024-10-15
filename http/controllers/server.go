@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"html/template"
 	"io"
+	"log"
 
 	"gihub.com/saiddis/quizgo"
 	"gihub.com/saiddis/quizgo/internal/install/database"
@@ -11,6 +12,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 type Client interface {
@@ -51,7 +53,12 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	// we must first register them using gob.Register
 	gob.Register(map[string]interface{}{})
 
-	store := cookie.NewStore([]byte("secret"))
+	env, err := godotenv.Read("../../.env")
+	if err != nil {
+		log.Fatalf("Could't read .env file: %v", err)
+	}
+	secret := env["AUTH0_CLIENT_SECRET"]
+	store := cookie.NewStore([]byte(secret))
 	server.Router.Use(sessions.Sessions("auth-session", store))
 
 	server.Router.Static("/css", "../../web/css")
@@ -65,6 +72,9 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	server.Router.GET("/logout", LogoutHandler)
 	server.Router.GET("/quiz", server.CreateQuizForGuest)
 
+	server.Router.GET("/leaderboard", server.GetTheHighestScore)
+	server.Router.GET("/leaderboard/load", server.UsersBestScorePagination)
+
 	user := server.Router.Group("/user")
 	user.Use(auth.IsAuthenticated)
 	user.GET("/", UserHandler)
@@ -73,7 +83,7 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 	user.POST("/quiz/answer", server.CreateAnswer)
 
 	user.GET("/history", server.GetLastQuizIDByEmail)
-	user.POST("/history/load", server.QuizzesPagination)
+	user.GET("/history/load", server.QuizzesPagination)
 	user.GET("/history/score", server.GetScore)
 	user.GET("/history/trivia", server.GetTrivias)
 	user.GET("/history/answer", server.GetAnswersByQuizID)

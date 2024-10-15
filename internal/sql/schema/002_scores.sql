@@ -5,7 +5,7 @@ CREATE TABLE scores (
 	hard_quizzes_done INT NOT NULL,
 	medium_quizzes_done INT NOT NULL,
 	easy_quizzes_done INT NOT NULL,
-	total_score INT NOT NULL NOT NULL,
+	total_score INT NOT NULL,
 	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 

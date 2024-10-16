@@ -14,7 +14,7 @@ import (
 
 var quizzesUrl = []string{
 	//"https://opentdb.com/api.php?amount=3&difficulty=easy",
-	"https://opentdb.com/api.php?amount=3",
+	"https://opentdb.com/api.php?amount=5",
 	//"https://opentdb.com/api.php?type=multiple&amount=2&difficulty=hard",
 }
 
@@ -24,12 +24,12 @@ func (s *Server) CreateQuizForGuest(c *gin.Context) {
 
 	urls := getAddedURLParams(quizType, quizCategory)
 
-	quizzes, err := s.Client.Fetch(c, urls)
+	trivias, err := s.Client.Fetch(c, urls)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.HTML(200, "quiz.html", gin.H{"quizzes": quizzes, "quiz_id": ""})
+	c.HTML(200, "quiz.html", gin.H{"quizzes": trivias, "quiz_id": ""})
 
 }
 

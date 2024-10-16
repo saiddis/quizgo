@@ -77,7 +77,7 @@ func NewServer(db *database.Queries, client Client, auth *authenticator.Authenti
 
 	user := server.Router.Group("/user")
 	user.Use(auth.IsAuthenticated)
-	user.GET("/", UserHandler)
+	user.GET("/", server.UserHandler)
 	user.GET("/quiz", server.CreateQuizForUser)
 	user.POST("/quiz/score", server.CreateScore)
 	user.POST("/quiz/answer", server.CreateAnswer)

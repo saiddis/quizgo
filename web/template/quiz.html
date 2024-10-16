@@ -14,16 +14,10 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body>
-    <main>
-        <div class="quiz-container" quiz_id="{{.quiz_id}}">
-        </div>
-        <button type="" class="next-btn button-key">Next</button>
-        <div class="results-container" hidden>
-            <button class="done-btn button-key">Done</button>
-        </div>
-    </main>
-
+<main>
+    <div class="quiz-container" quiz_id="{{.quiz_id}}">
+    </div>
+    <button type="" class="next-btn button-key">Next</button>
     <div class="quizzes" hidden>
         {{ range .quizzes }}
         <div class="quiz" type="{{.Type}}" trivia-id="{{.ID}}" category="{{.Category}}" difficulty="{{.Difficulty}}"
@@ -52,7 +46,8 @@
         </div>
         {{ end }}
     </div>
-</body>
+</main>
+
 <script src="/static/quiz.js"></script>
 
 </html>

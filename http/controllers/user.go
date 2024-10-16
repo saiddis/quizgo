@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -55,7 +56,7 @@ func (s *Server) GetUserIDByQuizID(c *gin.Context) {
 }
 
 // Handler for our logged-in user page.
-func UserHandler(c *gin.Context) {
+func (s *Server) UserHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	profile := session.Get("profile")
 	var pictureSrc string
@@ -69,9 +70,16 @@ func UserHandler(c *gin.Context) {
 		}
 	}
 
+	highestUserScore, err := s.db.GetUserHighestScoreByEmail(c, userEmail)
+	if err != nil {
+		//c.JSON(400, gin.H{"error": fmt.Sprintf("error retrieving highest user score score by id: %v", err)})
+		log.Printf("error retrieving highest user score by email: %v", err)
+		highestUserScore = "0"
+	}
 	c.HTML(http.StatusOK, "user.html", gin.H{
 		"profile": profile,
 		"picture": pictureSrc,
 		"email":   userEmail,
+		"score":   highestUserScore,
 	})
 }

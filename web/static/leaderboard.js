@@ -2,7 +2,7 @@ const main = document.querySelector("main")
 const nav = document.querySelector("nav")
 const table = document.querySelector("table")
 const loadMoreBtn = document.querySelector(".load-more-btn")
-main.style.paddingTop = nav.clientHeight + "px"
+main.style.top = nav.clientHeight + "px"
 
 let highestScore = parseInt(main.getAttribute("score"))
 console.log(highestScore)

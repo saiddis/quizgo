@@ -52,3 +52,8 @@ RIGHT JOIN
 ORDER BY 
     scores.total_score DESC
 LIMIT 10;
+
+-- name: GetUserHighestScoreByEmail :one
+SELECT max(scores.total_score) as score FROM scores
+JOIN users ON scores.user_id = users.id
+WHERE users.email = $1;

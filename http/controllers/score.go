@@ -119,6 +119,18 @@ func (s *Server) newNullUUID(id uuid.UUID) uuid.NullUUID {
 	}
 }
 
+func (s *Server) GetHighestUserScore(c *gin.Context) {
+	email := c.Request.FormValue("email")
+	score, err := s.db.GetUserHighestScoreByEmail(c, email)
+	if err != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("error retrieving highest user score score by id: %v", err)})
+		log.Printf("error retrieving highest user score by email: %v", err)
+		return
+	}
+
+	c.JSON(200, score)
+}
+
 func extractCompletionTime(m map[string]interface{}) (time.Duration, error) {
 	var completionTime time.Duration
 	var err error

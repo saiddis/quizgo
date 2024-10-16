@@ -114,6 +114,19 @@ func (q *Queries) GetTheHighestTotalScore(ctx context.Context) (interface{}, err
 	return score, err
 }
 
+const getUserHighestScoreByEmail = `-- name: GetUserHighestScoreByEmail :one
+SELECT max(scores.total_score) as score FROM scores
+JOIN users ON scores.user_id = users.id
+WHERE users.email = $1
+`
+
+func (q *Queries) GetUserHighestScoreByEmail(ctx context.Context, email string) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getUserHighestScoreByEmail, email)
+	var score interface{}
+	err := row.Scan(&score)
+	return score, err
+}
+
 const usersBestScorePagination = `-- name: UsersBestScorePagination :many
 WITH max_scores as (
     SELECT 

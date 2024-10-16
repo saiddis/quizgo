@@ -2,7 +2,7 @@ const main = document.querySelector(".history")
 const nav = document.querySelector("nav")
 const recordsContainer = document.querySelector(".records-container")
 const loadMoreBtn = document.querySelector(".load-more-btn")
-main.style.paddingTop = nav.clientHeight + "px"
+main.style.top = nav.clientHeight + "px"
 
 
 window.onload = async function() {
@@ -243,11 +243,6 @@ async function fetchAnswers(quizID) {
 			}
 		}
 	)
-	if (!response.ok) {
-		return {
-			Error: "The quiz was not answered"
-		}
-	}
 	const answers = await response.json()
 	return answers
 }
@@ -261,11 +256,6 @@ async function fetchTrivias(quizID) {
 			}
 		}
 	)
-	if (!response.ok) {
-		return {
-			Error: "The quiz was not completed"
-		}
-	}
 	const trivias = await response.json()
 	return trivias
 }
@@ -279,11 +269,6 @@ async function fetchScore(scoreID) {
 			}
 		}
 	)
-	if (!response.ok) {
-		return {
-			Error: "The quiz was not completed"
-		}
-	}
 	const score = await response.json()
 	return score
 }
@@ -297,11 +282,6 @@ async function fetchQuizzes(quizID) {
 			}
 		}
 	)
-	if (!response.ok) {
-		return {
-			Error: "No history data found"
-		}
-	}
 	const quizzes = await response.json()
 	return quizzes
 }

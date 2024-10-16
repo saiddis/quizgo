@@ -1,17 +1,17 @@
-document.querySelector("main").style.top = document.querySelector("nav").clientHeight + "px"
-document.querySelector(".results-container").style.top = document.querySelector("nav").clientHeight + "px"
-
-document.querySelector(".done-btn").addEventListener("click", function() {
-	location.reload()
-})
 class Quizgo {
 	constructor() {
+		this.main = document.querySelector("main")
 		this.quizStore = document.querySelector(".quizzes")
 		this.quizzes = document.querySelectorAll(".quiz")
 		this.index = 0
 		this.quizContainer = document.querySelector(".quiz-container")
 		this.nextBtn = document.querySelector(".next-btn")
-		this.results = document.querySelector(".results-container")
+		this.resultsContainer = document.createElement("div")
+		this.resultsContainer.className = "results-container"
+		this.finishBtn = document.createElement("button")
+		this.finishBtn.className = "finish-btn"
+		this.finishBtn.innerHTML = "Ok"
+		this.finishBtn.classList.add("button-key")
 		this.quizID = this.quizContainer.getAttribute("quiz_id")
 		this.startedAt = Date.now()
 		this.quizzesDone = new Map([
@@ -75,7 +75,7 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 
 			resultQuiz.insertAdjacentHTML("beforeend", `<li class="result-option">${optionValue}</li>`)
 
-			this.results.append(resultQuiz)
+			this.resultsContainer.append(resultQuiz)
 
 			if (optionValue == correctOptionValue) {
 				if (optionValue == selectedOptionValue) {
@@ -144,11 +144,13 @@ Difficulty: ${this.quiz.getAttribute("difficulty")}`
 		stats.insertAdjacentHTML("beforeend", ` <h3> Completed in: ${completedIn} seconds</h3> `)
 		stats.insertAdjacentHTML("beforeend", `<h3>Score: ${totalScore}</h3>`)
 
-		this.results.appendChild(stats)
-		let finishButton = this.results.querySelector(".done-btn")
-		this.results.appendChild(finishButton)
-		this.results.classList.add("show")
-		this.results.hidden = false
+		this.resultsContainer.appendChild(stats)
+		this.finishBtn.onclick = function() {
+			location.reload()
+		}
+		this.resultsContainer.appendChild(this.finishBtn)
+		this.main.appendChild(this.resultsContainer)
+		this.resultsContainer.style.top = document.querySelector("nav").clientHeight * 3 + "px"
 
 		if (this.quizID) {
 			fetch("/user/quiz/score", {

@@ -15,3 +15,8 @@
 - JavaScript и HTML (frontend)
 - Auth0 (аутентификация)
 - PostgreSQL (база данных) quizgo
+
+## Вот как это выглядит
+![image](https://github.com/user-attachments/assets/4b56929f-e4c0-4f07-8c6a-183af2444864)
+![image](https://github.com/user-attachments/assets/2bcd3390-d6df-4c27-aabd-587efe65767e)
+![image](https://github.com/user-attachments/assets/81d9d5ed-8e00-48e6-902e-4a1282a4dbe9)
